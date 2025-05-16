@@ -1,6 +1,6 @@
-using System.Diagnostics;
 using ChatbotAI.Models;
 using Microsoft.AspNetCore.Mvc;
+using System.Diagnostics;
 
 namespace ChatbotAI.Controllers
 {
@@ -14,6 +14,18 @@ namespace ChatbotAI.Controllers
         }
 
         public IActionResult Index()
+        {
+            return View();
+        }
+        public IActionResult ChatGPT()
+        {
+            return View();
+        }
+        public IActionResult Ollama()
+        {
+            return View();
+        }
+        public IActionResult StreamOllama()
         {
             return View();
         }

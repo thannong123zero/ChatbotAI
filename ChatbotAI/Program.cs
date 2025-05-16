@@ -1,8 +1,12 @@
+using ChatbotAI._Convergence.Hubs;
+using ChatbotAI._Convergence.Services;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
-
+builder.Services.AddSignalR();
+builder.Services.AddScoped<ChatService>();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -25,5 +29,5 @@ app.MapControllerRoute(
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
 
-
+app.MapHub<ChatHub>("/chat");
 app.Run();

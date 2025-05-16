@@ -1,0 +1,82 @@
+﻿@{
+    ViewData["Title"] = "Stream Ollama";
+}
+
+<div class="chat-container">
+    <div id="chat-messages">
+        <!-- Messages will appear here -->
+    </div>
+    <form id="chat-form">
+        <input id="chat-input" type="text" autocomplete="off" placeholder="Type your message...">
+        <button type="submit">Send</button>
+    </form>
+</div>
+
+@section Scripts {
+    <script src="~/lib/signalr/dist/browser/signalr.js"></script>
+    <script>
+        let connection = new signalR.HubConnectionBuilder().withUrl("/chat").build();
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
+        let context = [];
+        let keyMess = 0;
+        let message = '';
+
+        connection.start().then(function () {
+            console.log("SignalR connection established.");
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
+        connection.on("ReceiveMessage", function (res, context) {
+            message += res;
+            document.getElementById(`mess${keyMess}`).innerHTML = message;
+            if(context){
+                context = context;
+                console.log("Context: ", context);
+            }
+        });
+
+        chatForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const userMsg = chatInput.value.trim();
+            if (!userMsg) return;
+
+            appendMessage('You', userMsg);
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("GetStreamingResponse", "Ollama")',
+                data: JSON.stringify({
+                    request: userMsg,
+                    model: "gemma3",
+                    context: context,
+                    stream: true
+                }),
+                contentType: 'application/json',
+                dataType: 'json',
+                success: function (res) {
+                    keyMess++;
+                    const msgDiv = document.createElement('div');
+                    msgDiv.innerHTML = `<strong>Bot:</strong> <span id='mess${keyMess}'>${message}</span>`;
+                    msgDiv.style.margin = '8px 0';
+                    chatMessages.appendChild(msgDiv);
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                    message = '';
+                },
+                error: function (error) {
+                    console.error("Error submitting form:", error);
+                    //appendMessage('System', 'An error occurred while sending your message. Please try again.');
+                }
+            });
+            chatInput.value = '';
+        });
+
+        function appendMessage(sender, message) {
+            const msgDiv = document.createElement('div');
+            msgDiv.innerHTML = `<strong>${sender}:</strong> ${message}`;
+            msgDiv.style.margin = '8px 0';
+            chatMessages.appendChild(msgDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+    </script>
+}
